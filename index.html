@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VBlade — Central de Consulta Técnica</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+  :root {
+    --bg: #0d0f12;
+    --bg2: #13161b;
+    --bg3: #1a1e25;
+    --border: #2a2f3a;
+    --accent: #e8a020;
+    --accent2: #c44d28;
+    --text: #dde2eb;
+    --text2: #8a92a6;
+    --green: #3dcf8e;
+    --red: #e05454;
+    --blue: #4a9eff;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --display: 'Bebas Neue', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--bg2);
+    border-bottom: 2px solid var(--accent);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 64px;
+  }
+
+  .logo {
+    font-family: var(--display);
+    font-size: 2rem;
+    letter-spacing: 3px;
+    color: var(--accent);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .logo span { color: var(--text2); font-size: 0.9rem; font-family: var(--mono); display: block; letter-spacing: 1px; margin-top: -2px; }
+
+  .search-wrap {
+    flex: 1;
+    max-width: 420px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 8px 12px 8px 36px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: .4; }
+
+  /* ── LAYOUT ── */
+  .app {
+    display: flex;
+    height: calc(100vh - 64px);
+  }
+
+  /* ── SIDEBAR ── */
+  nav {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 12px 0;
+  }
+
+  .nav-section-title {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    color: var(--text2);
+    padding: 16px 16px 6px;
+    text-transform: uppercase;
+  }
+
+  nav button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    text-align: left;
+    transition: all .15s;
+    border-left: 3px solid transparent;
+  }
+  nav button:hover { background: var(--bg3); color: var(--text); }
+  nav button.active {
+    background: var(--bg3);
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  nav button .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  /* ── CONTENT ── */
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+    max-width: 900px;
+  }
+
+  .page { display: none; animation: fadeIn .2s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+
+  h1 {
+    font-family: var(--display);
+    font-size: 2.4rem;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  h2 {
+    font-family: var(--display);
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    color: var(--text);
+    margin: 28px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin: 18px 0 8px;
+    text-transform: uppercase;
+  }
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text2);
+    margin-bottom: 24px;
+  }
+
+  /* ── CARDS GRID ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(232,160,32,.1); }
+  .card .card-icon { font-size: 1.6rem; margin-bottom: 8px; }
+  .card .card-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+  .card .card-desc { font-size: 0.78rem; color: var(--text2); line-height: 1.5; }
+
+  /* ── INFO BLOCKS ── */
+  .info-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .info-block.warn { border-left: 3px solid var(--accent); }
+  .info-block.danger { border-left: 3px solid var(--red); }
+  .info-block.ok { border-left: 3px solid var(--green); }
+  .info-block.info { border-left: 3px solid var(--blue); }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin: 2px 3px 2px 0;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+  .tag.alt { border-color: var(--accent); color: var(--accent); background: rgba(232,160,32,.08); }
+
+  p { font-size: 0.88rem; line-height: 1.7; color: var(--text2); margin-bottom: 10px; }
+  strong { color: var(--text); }
+
+  /* ── TABLE ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin-bottom: 20px;
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text2);
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tr:hover td { background: var(--bg3); }
+  .dot {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+    border: 1px solid rgba(255,255,255,.2);
+  }
+
+  /* ── WIRE COLORS ── */
+  .wire-ac { background: #87CEEB; }
+  .wire-ae { background: #1565C0; }
+  .wire-am { background: #FFD700; }
+  .wire-azb { background: linear-gradient(to right, #87CEEB 50%, #fff 50%); }
+  .wire-amb { background: linear-gradient(to right, #FFD700 50%, #fff 50%); }
+  .wire-amvm { background: linear-gradient(to right, #FFD700 50%, #c00 50%); }
+  .wire-b { background: #fff; }
+  .wire-cz { background: #aaa; }
+  .wire-l { background: #ff8c00; }
+  .wire-mr { background: #8B4513; }
+  .wire-p { background: #111; border-color: #555; }
+  .wire-pb { background: linear-gradient(to right, #111 50%, #fff 50%); border-color: #555; }
+  .wire-r { background: #ffb6c1; }
+  .wire-rx { background: #8B008B; }
+  .wire-v { background: #228B22; }
+  .wire-vc { background: #90EE90; }
+  .wire-vd { background: #228B22; }
+  .wire-vdam { background: linear-gradient(to right, #228B22 50%, #FFD700 50%); }
+  .wire-vdp { background: linear-gradient(to right, #228B22 50%, #111 50%); border-color: #555; }
+  .wire-vdvm { background: linear-gradient(to right, #228B22 50%, #c00 50%); }
+  .wire-vm { background: #c00; }
+  .wire-vmb { background: linear-gradient(to right, #c00 50%, #fff 50%); }
+  .wire-vmvd { background: linear-gradient(to right, #c00 50%, #228B22 50%); }
+  .wire-pvb { background: linear-gradient(to right, #111 50%, #c00 50%); border-color: #555; }
+
+  /* ── ACCORDION ── */
+  .accordion { margin-bottom: 10px; }
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: border-color .2s;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .accordion-header:hover { border-color: var(--accent); }
+  .accordion-header .acc-icon { color: var(--accent); transition: transform .2s; }
+  .accordion-header.open .acc-icon { transform: rotate(90deg); }
+  .accordion-body {
+    display: none;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    padding: 16px;
+  }
+  .accordion-body.open { display: block; }
+
+  /* ── STEPS ── */
+  .steps { list-style: none; }
+  .steps li {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    font-size: 0.86rem;
+    line-height: 1.6;
+  }
+  .steps li .num {
+    min-width: 26px; height: 26px;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li input[type=checkbox] { margin-top: 3px; accent-color: var(--accent); }
+  .checklist li.done label { text-decoration: line-through; color: var(--text2); }
+  label { cursor: pointer; line-height: 1.5; }
+
+  /* ── BADGE ── */
+  .badge {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .badge-ok { background: rgba(61,207,142,.15); color: var(--green); }
+  .badge-warn { background: rgba(232,160,32,.15); color: var(--accent); }
+  .badge-danger { background: rgba(224,84,84,.15); color: var(--red); }
+
+  /* ── HOME HERO ── */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .hero-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  .hero-btn:hover { border-color: var(--accent); background: var(--bg3); transform: translateY(-3px); box-shadow: 0 6px 24px rgba(232,160,32,.12); }
+  .hero-btn .hi { font-size: 2rem; margin-bottom: 8px; }
+  .hero-btn .hl { font-family: var(--display); font-size: 1.1rem; letter-spacing: 1px; color: var(--accent); }
+
+  /* ── SEARCH RESULTS ── */
+  #search-results {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 340px;
+    overflow-y: auto;
+    z-index: 200;
+  }
+  .sr-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .sr-item:hover { background: var(--bg3); }
+  .sr-item .sr-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+  .sr-item .sr-cat { font-family: var(--mono); font-size: 0.68rem; color: var(--accent); margin-bottom: 4px; }
+  .sr-item .sr-text { font-size: 0.78rem; color: var(--text2); }
+  mark { background: rgba(232,160,32,.3); color: var(--text); border-radius: 2px; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a4050; }
+
+  @media (max-width: 640px) {
+    nav { width: 52px; min-width: 52px; }
+    nav button span { display: none; }
+    nav button { justify-content: center; }
+    .nav-section-title { display: none; }
+    main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">V-BLADE<span>// CONSULTA TÉCNICA</span></div>
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="searchInput" placeholder="Buscar peças, componentes, dicas…" autocomplete="off">
+    <div id="search-results"></div>
+  </div>
+</header>
+
+<div class="app">
+  <nav>
+    <div class="nav-section-title">Menu</div>
+    <button class="active" onclick="showPage('home')"><span class="icon">🏠</span><span>Início</span></button>
+    <button onclick="showPage('eletrica')"><span class="icon">⚡</span><span>Elétrica</span></button>
+    <button onclick="showPage('fios')"><span class="icon">🔌</span><span>Fios & Cores</span></button>
+    <button onclick="showPage('motor')"><span class="icon">🔧</span><span>Motor & Óleo</span></button>
+    <button onclick="showPage('freios')"><span class="icon">🛑</span><span>Freios</span></button>
+    <button onclick="showPage('carburador')"><span class="icon">🫁</span><span>Carburador</span></button>
+    <button onclick="showPage('pecas')"><span class="icon">🔩</span><span>Peças Compat.</span></button>
+    <button onclick="showPage('reforma')"><span class="icon">📋</span><span>Reforma Elét.</span></button>
+    <button onclick="showPage('testes')"><span class="icon">✅</span><span>Testes Finais</span></button>
+    <button onclick="showPage('manutencao')"><span class="icon">📅</span><span>Manutenção</span></button>
+  </nav>
+
+  <main>
+
+    <!-- HOME -->
+    <div id="page-home" class="page active">
+      <h1>VBlade</h1>
+      <div class="subtitle">// base de conhecimento técnico — peças · elétrica · motor · manutenção</div>
+      <div class="hero-grid">
+        <button class="hero-btn" onclick="showPage('eletrica')"><div class="hi">⚡</div><div class="hl">Elétrica</div><div>CDI, bobinas, relés</div></button>
+        <button class="hero-btn" onclick="showPage('fios')"><div class="hi">🔌</div><div class="hl">Fios</div><div>Cores e funções</div></button>
+        <button class="hero-btn" onclick="showPage('motor')"><div class="hi">🔧</div><div class="hl">Motor</div><div>Óleo, filtro, válvulas</div></button>
+        <button class="hero-btn" onclick="showPage('freios')"><div class="hi">🛑</div><div class="hl">Freios</div><div>Disco, pinças, lona</div></button>
+        <button class="hero-btn" onclick="showPage('carburador')"><div class="hi">🫁</div><div class="hl">Carburador</div><div>Lateral, regulagem</div></button>
+        <button class="hero-btn" onclick="showPage('pecas')"><div class="hi">🔩</div><div class="hl">Peças</div><div>Compatibilidades</div></button>
+        <button class="hero-btn" onclick="showPage('reforma')"><div class="hi">📋</div><div class="hl">Reforma Elét.</div><div>Chicote completo</div></button>
+        <button class="hero-btn" onclick="showPage('testes')"><div class="hi">✅</div><div class="hl">Testes</div><div>Checklist final</div></button>
+      </div>
+      <h2>Dados Gerais</h2>
+      <div class="card-grid">
+        <div class="info-block info">
+          <h3>Bateria</h3>
+          <p><strong>12V 9Ah</strong><br>Fusível principal: <strong>20A</strong> (alguns usam 25A)</p>
+        </div>
+        <div class="info-block info">
+          <h3>Tanque</h3>
+          <p>Capacidade total (até 2008): <strong>13,6 litros</strong></p>
+        </div>
+        <div class="info-block info">
+          <h3>Óleo Motor</h3>
+          <p>Manual: <strong>20W40 Mobil</strong><br>Dica Cleiton: <strong>20W50 Mobil</strong></p>
+        </div>
+        <div class="info-block info">
+          <h3>Troca de Óleo</h3>
+          <p>Manual: <strong>1.500 km</strong><br>Dica Cleiton: <strong>2.500 km</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELÉTRICA -->
+    <div id="page-eletrica" class="page">
+      <h1>Elétrica</h1>
+      <div class="subtitle">// CDI · bobinas · regulador · relé de partida · componentes</div>
+
+      <h2>CDI (1) — Conector 6P</h2>
+      <table>
+        <tr><th>Pino</th><th>Cor/Código</th><th>Função</th></tr>
+        <tr><td>1</td><td><span class="dot wire-azb"></span>Az/B</td><td>Bobina de carga — pulso</td></tr>
+        <tr><td>2</td><td><span class="dot wire-amvm"></span>Am/Vm</td><td>Sinal de carga / tensão</td></tr>
+        <tr><td>3</td><td><span class="dot wire-pvb"></span>P/Vm</td><td>Kill switch / corte ignição</td></tr>
+        <tr><td>4</td><td><span class="dot wire-vdp"></span>Vd/P</td><td>Saída para bobina ignição (1)</td></tr>
+        <tr><td>5</td><td><span class="dot wire-p"></span>P</td><td>Massa GND</td></tr>
+        <tr><td>6</td><td><span class="dot wire-amb"></span>Am/B</td><td>Sinal sensor velocidade</td></tr>
+      </table>
+
+      <h2>CDI (2) — Conector 6P</h2>
+      <table>
+        <tr><th>Pino</th><th>Cor/Código</th><th>Função</th></tr>
+        <tr><td>1</td><td><span class="dot wire-azb"></span>Az/B</td><td>Bobina de carga — pulso</td></tr>
+        <tr><td>2</td><td><span class="dot wire-amvm"></span>Am/Vm</td><td>Sinal de carga / tensão</td></tr>
+        <tr><td>3</td><td><span class="dot wire-pvb"></span>P/Vm</td><td>Kill switch / corte ignição</td></tr>
+        <tr><td>4</td><td><span class="dot wire-vdp"></span>Vd/P</td><td>Saída para bobina ignição (2)</td></tr>
+        <tr><td>5</td><td><span class="dot wire-p"></span>P</td><td>Massa GND</td></tr>
+        <tr><td>6</td><td><span class="dot wire-pb"></span>P/B</td><td>Interruptor do neutro (N)</td></tr>
+      </table>
+
+      <div class="info-block danger">
+        ⚠️ <strong>CDI Duplo:</strong> NUNCA inverta os conectores. CDI 1 → Bobina 1, CDI 2 → Bobina 2. A inversão pode causar falha ou dano permanente.
+      </div>
+
+      <h2>Regulador / Retificador — Conector 6P</h2>
+      <table>
+        <tr><th>Pino</th><th>Cor</th><th>Função</th></tr>
+        <tr><td>1-3</td><td><span class="dot wire-b"></span>Branco (B)</td><td>3 fases CA da bobina de carga</td></tr>
+        <tr><td>4</td><td><span class="dot wire-vm"></span>Vm</td><td>Saída CC+ → bateria</td></tr>
+        <tr><td>5</td><td><span class="dot wire-p"></span>P</td><td>Massa GND</td></tr>
+        <tr><td>6</td><td><span class="dot wire-vdam"></span>Vd/Am</td><td>Sinal de carga / regulação</td></tr>
+      </table>
+      <div class="info-block warn">Usar fio mínimo <strong>1,5mm²</strong> no regulador. Garantir fixação no chassi para resfriamento por condução.</div>
+
+      <h2>Relé de Partida — 4P</h2>
+      <table>
+        <tr><th>Terminal</th><th>Cor</th><th>Função</th></tr>
+        <tr><td>A1 (bobina)</td><td><span class="dot wire-vm"></span>Vm</td><td>Positivo 12V — botão de partida</td></tr>
+        <tr><td>A2 (bobina)</td><td><span class="dot wire-p"></span>P</td><td>Massa GND</td></tr>
+        <tr><td>30 (potência)</td><td><span class="dot wire-vm"></span>Vm 2,5mm²</td><td>Positivo bateria (+)</td></tr>
+        <tr><td>87 (potência)</td><td><span class="dot wire-vdvm"></span>Vd/Vm</td><td>Saída para motor de partida</td></tr>
+      </table>
+      <div class="info-block danger">⚠️ <strong>Diodo 6A/400V</strong> em paralelo com a bobina (A1/A2). Catodo (faixa) para o terminal positivo. Não omitir!</div>
+
+      <h2>Bobinas de Ignição</h2>
+      <table>
+        <tr><th>Terminal</th><th>Cor</th><th>Função</th></tr>
+        <tr><td>Primário +</td><td><span class="dot wire-vdp"></span>Vd/P</td><td>Saída do CDI correspondente</td></tr>
+        <tr><td>Primário −</td><td><span class="dot wire-p"></span>P</td><td>Massa GND</td></tr>
+        <tr><td>Secundário</td><td>Cabo de vela</td><td>Faston direto à vela</td></tr>
+      </table>
+
+      <h2>Sensor de Velocidade — 3P</h2>
+      <table>
+        <tr><th>Pino</th><th>Cor</th><th>Função</th></tr>
+        <tr><td>1</td><td><span class="dot wire-p"></span>P</td><td>Massa GND</td></tr>
+        <tr><td>2</td><td><span class="dot wire-vm"></span>Vm</td><td>Alimentação 12V</td></tr>
+        <tr><td>3</td><td><span class="dot wire-cz"></span>Cz</td><td>Sinal para CDI e painel</td></tr>
+      </table>
+
+      <h2>Interruptor de Ignição</h2>
+      <table>
+        <tr><th>Terminal</th><th>Cor</th><th>Função</th></tr>
+        <tr><td>COM</td><td><span class="dot wire-vm"></span>Vm</td><td>Positivo bateria — sempre energizado</td></tr>
+        <tr><td>ON</td><td><span class="dot wire-pb"></span>P/B</td><td>Saída para CDI e sistemas</td></tr>
+        <tr><td>OFF</td><td>—</td><td>Circuito aberto</td></tr>
+      </table>
+
+      <h2>Componentes Equivalentes</h2>
+      <div class="card-grid">
+        <div class="info-block info">
+          <h3>CDI</h3>
+          <p>Apenas o <strong>original</strong>. CDI da Biz 125 não é garantido (corrente diferente). A <strong>centec.com.br</strong> fabrica CDI para VBlade.</p>
+        </div>
+        <div class="info-block info">
+          <h3>Estator</h3>
+          <p>Virago 250 · Garinni GR250T3 · Kansas 250<br>Código correto: <strong>3DM-81410-00</strong></p>
+          <p style="color:var(--red)">NÃO usar: "ESTATOR EN125 YES/INTRUDER 125…"</p>
+        </div>
+        <div class="info-block info">
+          <h3>Regulador</h3>
+          <p>Twister (esquenta menos) · Falcon (mudar posição fiação) · XRE/Tornado/Fazer/Kansas 250</p>
+        </div>
+        <div class="info-block info">
+          <h3>Bobinas Pulsadoras</h3>
+          <p>Titan KS · XR200</p>
+          <p><strong>Teste:</strong> multímetro continuidade → deve medir ≥250Ω</p>
+        </div>
+        <div class="info-block info">
+          <h3>Bobina de Ignição</h3>
+          <p>Sahara 350 · Titan 150 (abrir chapinha 3mm) · Web 100 · Hunter 100 · Max 125</p>
+        </div>
+        <div class="info-block info">
+          <h3>Relé de Pisca</h3>
+          <p>Relé automotivo DNI1109 (3 terminais) · Biz 100 · CG 150<br>
+          Vd → polo 31 · P → polo 49 · Cinza → polo 49a</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIOS -->
+    <div id="page-fios" class="page">
+      <h1>Fios & Cores</h1>
+      <div class="subtitle">// legenda completa do chicote original VBlade</div>
+      <table>
+        <tr><th>Amostra</th><th>Código</th><th>Cor</th><th>Uso Principal</th><th>Bitola Recom.</th></tr>
+        <tr><td><span class="dot wire-ac"></span></td><td>AC</td><td>Azul Claro</td><td>Piscas / sinalização</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-ae"></span></td><td>AE</td><td>Azul Escuro</td><td>Farol / iluminação</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-am"></span></td><td>Am</td><td>Amarelo</td><td>Alimentação positiva auxiliar</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-azb"></span></td><td>Az/B</td><td>Azul/Branco</td><td>CDI / ignição</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-amb"></span></td><td>Am/B</td><td>Amarelo/Branco</td><td>Sensor / painel</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-amvm"></span></td><td>Am/Vm</td><td>Amarelo/Vermelho</td><td>CDI / sinal de carga</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-b"></span></td><td>B</td><td>Branco</td><td>Bobina de carga / gerador (3 fases CA)</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-cz"></span></td><td>Cz</td><td>Cinza</td><td>Sensor de velocidade</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-l"></span></td><td>L</td><td>Laranja</td><td>Lanterna / freio</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-mr"></span></td><td>Mr</td><td>Marrom</td><td>Lanterna traseira</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-p"></span></td><td>P</td><td>Preto</td><td>Massa / GND (principal)</td><td>2,5mm²</td></tr>
+        <tr><td><span class="dot wire-pb"></span></td><td>P/B</td><td>Preto/Branco</td><td>Interruptor / ignição</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-pvb"></span></td><td>P/Vm</td><td>Preto/Vermelho</td><td>Comutador / iluminação / kill switch</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-r"></span></td><td>R</td><td>Rosa</td><td>Pisca dianteiro direito</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-rx"></span></td><td>Rx</td><td>Roxo</td><td>Velocímetro / odômetro</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-vd"></span></td><td>Vd</td><td>Verde</td><td>Pisca dianteiro esq. / terra auxiliar</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-vc"></span></td><td>VC</td><td>Verde Claro</td><td>Bobina de pulso / CDI</td><td>0,75mm²</td></tr>
+        <tr><td><span class="dot wire-vdam"></span></td><td>Vd/Am</td><td>Verde/Amarelo</td><td>Regulador / retificador</td><td>1,5mm²</td></tr>
+        <tr><td><span class="dot wire-vdp"></span></td><td>Vd/P</td><td>Verde/Preto</td><td>CDI / bobina ignição</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-vdvm"></span></td><td>Vd/Vm</td><td>Verde/Vermelho</td><td>Relé de partida / fusível</td><td>0,50mm²</td></tr>
+        <tr><td><span class="dot wire-vm"></span></td><td>Vm</td><td>Vermelho</td><td>Positivo bateria / alimentação principal</td><td>2,5mm²</td></tr>
+        <tr><td><span class="dot wire-vmb"></span></td><td>Vm/B</td><td>Vermelho/Branco</td><td>Ignição</td><td>1,5mm²</td></tr>
+        <tr><td><span class="dot wire-vmvd"></span></td><td>Vm/Vd</td><td>Vermelho/Verde</td><td>Bóia de combustível</td><td>0,50mm²</td></tr>
+      </table>
+      <div class="info-block ok">
+        💡 <strong>Dica:</strong> onde não encontrar fio bicolor no mercado, use fio da cor principal e marque as extremidades com fita colorida ou caneta permanente.
+      </div>
+      <h2>Bóia de Combustível</h2>
+      <table>
+        <tr><th>Estado</th><th>Resistência típica</th></tr>
+        <tr><td>Tanque cheio</td><td>~10 Ω</td></tr>
+        <tr><td>Tanque vazio</td><td>~110 Ω</td></tr>
+      </table>
+      <div class="info-block warn">Fio Vm/Vd — inversão de polaridade pode queimar o marcador de combustível.</div>
+    </div>
+
+    <!-- MOTOR -->
+    <div id="page-motor" class="page">
+      <h1>Motor & Óleo</h1>
+      <div class="subtitle">// lubrificação · filtros · embreagem · válvulas · velas</div>
+
+      <h2>Óleo do Motor</h2>
+      <div class="card-grid">
+        <div class="info-block info"><h3>Tipo</h3><p>Manual: <strong>20W40 Mobil</strong><br>Dica Cleiton: <strong>20W50 Mobil</strong></p></div>
+        <div class="info-block info"><h3>Volume</h3>
+          <p>Sem filtro: <strong>1.400 mL</strong><br>Com filtro: <strong>1.600 mL</strong><br>Motor aberto: <strong>1.800 mL</strong></p>
+          <p>Dica Cleiton: 1.600–1.800 mL com troca de filtro</p>
+        </div>
+        <div class="info-block info"><h3>Intervalo</h3><p>Manual: <strong>1.500 km</strong><br>Dica Cleiton: <strong>2.500 km</strong></p></div>
+      </div>
+
+      <h2>Filtro de Óleo</h2>
+      <p>Compatíveis: <span class="tag">XT600</span><span class="tag">Virago 250</span><span class="tag">Garinni 250</span></p>
+      <p>Filtro de tela lavável: <span class="tag alt">Kansas 250</span> — dura muito mais, ótimo custo/benefício (lavar com gasolina).</p>
+
+      <h2>Parafuso de Dreno</h2>
+      <p><span class="tag">Virago 250</span><span class="tag">Kansas 250</span><span class="tag">Garinni 250</span></p>
+      <p>O que fica por baixo: <span class="tag">Titan 2000–2004</span></p>
+      <p>Tampa de abastecimento: <span class="tag">CG / qualquer Honda até 200cc</span> — cortar a vareta.</p>
+
+      <h2>Embreagem</h2>
+      <p>Discos: <span class="tag alt">XT600</span> (sobram 3 discos — ok eliminar o mais estreito) · <span class="tag">Virago 250</span> · <span class="tag">Kansas 250</span> · <span class="tag">Garinni 250</span></p>
+      <div class="info-block warn">
+        <strong>Preparação do cubo:</strong> rebaixar <strong>2mm</strong> (nem mais, nem menos) nos furos rosqueados dos parafusos das molas. Evita patinação prematura.
+      </div>
+
+      <h2>Corrente de Comando</h2>
+      <p><span class="tag">Virago XV250</span><span class="tag">Kansas 250</span><span class="tag">Garinni GR250</span></p>
+
+      <h2>Velas</h2>
+      <table>
+        <tr><th>Tipo</th><th>Código</th></tr>
+        <tr><td>Comum</td><td>NGK / YBR C7HSA (Pop 100)</td></tr>
+        <tr><td>Iridium</td><td>CR7HIX</td></tr>
+      </table>
+      <div class="info-block warn">
+        <strong>Cabeçote melando vela:</strong><br>
+        Apenas de manhã → <strong>retentor de guias de válvulas</strong><br>
+        O dia todo → <strong>anéis</strong> (se trocar anéis, trocar pistões também)
+      </div>
+
+      <h2>Pistão</h2>
+      <p>Usar pistão da <span class="tag alt">Biz</span> — 2mm maior → 50,6 ou 50,7cc. Alternativa: Cripton (mas Biz é melhor).</p>
+
+      <h2>Componentes do Motor — Compatibilidades</h2>
+      <table>
+        <tr><th>Componente</th><th>Substituto</th><th>Observação</th></tr>
+        <tr><td>Retentor eixo embreagem</td><td>Virabrequim Intruder 250</td><td>14×26×06 — Ref. SZ0154 11-57</td></tr>
+        <tr><td>Juntas tampas laterais</td><td>Virago 250</td><td>—</td></tr>
+        <tr><td>Motor de partida (escova)</td><td>YBR antiga / Virago 250</td><td>Trocar fundo pelo original</td></tr>
+        <tr><td>Escape (junta/anel fogo)</td><td>Biz 125</td><td>—</td></tr>
+      </table>
+      <div class="info-block info">Peças da Virago 250 servem na VBlade, <strong>EXCETO:</strong> estator, tampa do estator, tampa do pião e tampa do cárter.</div>
+    </div>
+
+    <!-- FREIOS -->
+    <div id="page-freios" class="page">
+      <h1>Freios</h1>
+      <div class="subtitle">// disco · pinça · pastilha · lona · cabos</div>
+
+      <h2>Freio Dianteiro (Disco)</h2>
+      <div class="card-grid">
+        <div class="info-block info"><h3>Disco</h3><p><span class="tag alt">Virago 250</span> ou <span class="tag alt">XT600</span> — usar o de <strong>4mm</strong></p></div>
+        <div class="info-block info"><h3>Pinça</h3><p><span class="tag alt">Yes 125</span> e <span class="tag alt">Kansas 150</span> — plug & play<br><span class="tag">XTZ 125</span> — embuchar pino superior</p></div>
+        <div class="info-block info"><h3>Pastilha</h3><p><span class="tag">Yes 125</span> ou <span class="tag">XTZ 125</span></p></div>
+        <div class="info-block info"><h3>Burrinho / Cilindro-Mestre</h3><p>Biz 125, Titan 125/150/160, Twister, YBR, Factor, Fazer, Kansas, Mirage, Intruder, Virago, Yes 125 — qualquer com furo ⅞"</p></div>
+      </div>
+
+      <h2>Freio Traseiro (Tambor)</h2>
+      <div class="info-block warn">
+        <strong>Patim:</strong> marca Fischer (<em>único que relatam servir</em>) para VBlade e FYM 250.<br>
+        <strong>Lona:</strong> Fiat 147 — pedir a mais fina, colar 2 peças, fazer furos e rebitar no patim original.
+      </div>
+      <p>Mola patim traseiro: <span class="tag">Fazer 250</span></p>
+      <p>Mola pedal de freio: <span class="tag">CG até 2009</span> (muda o jeito de colocar, mas funciona)</p>
+
+      <h2>Cabo do Freio Traseiro</h2>
+      <div class="info-block info">
+        Usar cabo da <span class="tag alt">Biz</span> — fica igual ao original. Cortar o cabo ruim, fazer furo com fenda no encaixe original e colocar o cabo da Biz no lugar.
+      </div>
+
+      <h2>Alternativa: Varão (eliminar cabo)</h2>
+      <ul class="steps">
+        <li><span class="num">1</span><span>Usar 2 varões de freio da CG Titan 125. Um lado tem rosca (~10cm), o outro tem ponta em "L" com dobra de ~1cm.</span></li>
+        <li><span class="num">2</span><span>Unir as duas pontas em "L" com 2 clips para cabo de aço; fazer furo no centro e unir com parafuso 6×20.</span></li>
+        <li><span class="num">3</span><span>Ponta com rosca dianteira: travar no clips do pedal com porca M6, por dentro.</span></li>
+        <li><span class="num">4</span><span>Ponta com rosca traseira: passar no encaixe cilíndrico do braço de acionamento do came (sapata) e travar com porca M6 e mola.</span></li>
+      </ul>
+      <div class="info-block ok">✅ Vantagem do varão: acionamento instantâneo (sem elasticidade do cabo). Cuidado para não travar a roda.</div>
+    </div>
+
+    <!-- CARBURADOR -->
+    <div id="page-carburador" class="page">
+      <h1>Carburador</h1>
+      <div class="subtitle">// original · lateral (CG) · regulagem · limpeza</div>
+
+      <h2>Regulagem do Carburador Original</h2>
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAcc(this)">
+          <span>Método 1 — Padrão</span><span class="acc-icon">▶</span>
+        </div>
+        <div class="accordion-body">
+          <ul class="steps">
+            <li><span class="num">1</span><span>Apertar o parafuso da mistura completamente.</span></li>
+            <li><span class="num">2</span><span>Desapertar dando <strong>2½ voltas</strong> e apertar levemente o parafuso de rotação.</span></li>
+            <li><span class="num">3</span><span>Ligar o motor.</span></li>
+            <li><span class="num">4</span><span>Desapertar o parafuso de mistura até estabilizar a rotação.</span></li>
+            <li><span class="num">5</span><span>Desapertar o parafuso de rotação. Se ainda tremer, desapertar os dois mais um pouco.</span></li>
+          </ul>
+          <p>Manual recomenda <strong>2¼ voltas</strong>, mas varia conforme estado do motor.</p>
+        </div>
+      </div>
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAcc(this)">
+          <span>Método 2 — Cleiton (dinâmico)</span><span class="acc-icon">▶</span>
+        </div>
+        <div class="accordion-body">
+          <ul class="steps">
+            <li><span class="num">1</span><span>Motor funcionando: apertar levemente o parafuso de aceleração para subir a rotação.</span></li>
+            <li><span class="num">2</span><span>Fechar o parafuso de ar (mistura) e observar a rotação diminuir.</span></li>
+            <li><span class="num">3</span><span>Abrir devagar até a rotação subir novamente.</span></li>
+            <li><span class="num">4</span><span>Encontrar o ponto de maior aceleração (esse é o ponto correto, independente do número de voltas).</span></li>
+            <li><span class="num">5</span><span>Acertar a lenta no parafuso de aceleração.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Nível da Bóia</h2>
+      <table>
+        <tr><th>Posição</th><th>Medida</th></tr>
+        <tr><td>Bóia para baixo</td><td><strong>17mm</strong> da face da tampa da cuba</td></tr>
+        <tr><td>Bóia para cima</td><td><strong>8mm</strong> da face da tampa da cuba</td></tr>
+      </table>
+      <p>Agulha da bóia compatível: <span class="tag">CG To Day / CG "burrão"</span></p>
+
+      <h2>Limpeza sem Desmontar</h2>
+      <ul class="steps">
+        <li><span class="num">1</span><span>Abrir apenas a cuba (lado do manete da embreagem) e limpar com <strong>CAR 80</strong>.</span></li>
+        <li><span class="num">2</span><span>Soltar os giclês (alta e baixa) com cuidado; limpar furos da flauta e furo central com fio fino (tipo desentupidor de fogão).</span></li>
+        <li><span class="num">3</span><span>Abrir a tampa do lado oposto (manete do freio), retirar o diafragma com pistonete e agulha. Limpar e verificar desgaste da agulha.</span></li>
+        <li><span class="num">4</span><span>Aplicar CAR 80 no canal da agulha também. Montar com cuidado — não apertar giclês em excesso.</span></li>
+      </ul>
+
+      <h2>Verificação de Ar Falso (Coletor)</h2>
+      <ul class="steps">
+        <li><span class="num">1</span><span>Motor ligado, usar spray WD40 (ou similar).</span></li>
+        <li><span class="num">2</span><span>Aplicar na junção dos 2 cilindros com o coletor.</span></li>
+        <li><span class="num">3</span><span>Depois na junção do carburador com o coletor.</span></li>
+        <li><span class="num">4</span><span>Se houver oscilação na aceleração no momento da aplicação → entrada de ar falsa encontrada.</span></li>
+      </ul>
+
+      <h2>Carburador Lateral (Adaptação CG)</h2>
+      <div class="info-block warn">
+        Usar carburador <strong>PARALELO</strong> da Titan 150 (2005–2009). Coletor fabricado pelo Cleiton (especificações proprietárias).
+      </div>
+
+      <h2>Passo a Passo — Carburador Lateral na Virago</h2>
+      <p style="font-size:0.8rem;color:var(--text2)">Adaptação documentada por Flávio Henrique Hussar com a equipe PCR Motos (Curitiba-PR, 2019)</p>
+      <ul class="steps">
+        <li><span class="num">1</span><span><strong>Carburador:</strong> CG 150cc comum (paralelo) com giclê de alta <strong>110</strong>. O giclê correto varia por moto — testar. Motor retificado com pistão de Biz pode precisar de 115+.</span></li>
+        <li><span class="num">2</span><span><strong>Coletor:</strong> coletor de aço carbono para carburador 150cc (Mercado Livre). Fixar com junta em cada lado (cola de junta no cabeçote + nos dois lados da junta + no coletor). Parafusar coletor de borracha CG 150cc Sport <em>SEM catalisador</em> no coletor de aço.</span></li>
+        <li><span class="num">3</span><span><strong>Cabo de acelerador:</strong> para CG 150cc Sport usar cabo original da Virago. Para CG 150cc comum, usar cabo da CG 150cc comum. Pode precisar de ajustes de folga.</span></li>
+        <li><span class="num">4</span><span><strong>Torneira:</strong> YBR (pode ser Intruder), sem bomba a vácuo. Filtro de ar do Fusca ou outro que encaixe.</span></li>
+        <li><span class="num">5</span><span><strong>Consumo esperado:</strong> cidade 25–30 km/L · estrada 40 km/L. Sem perda de força ou falhas.</span></li>
+      </ul>
+
+      <h2>Bomba a Vácuo</h2>
+      <p>Compatível: <span class="tag">Universal Mikuni</span> (usada em kart, Dragstar, Mirage 250, 535).</p>
+      <div class="info-block info">
+        <strong>Antes de trocar:</strong> solte as mangueiras (marcando entradas/saídas), sopre com ar comprimido. Se não limpar, abra e verifique o diafragma — pode fazer um novo com tela de RX ou garrafa PET.
+      </div>
+    </div>
+
+    <!-- PEÇAS COMPATÍVEIS -->
+    <div id="page-pecas" class="page">
+      <h1>Peças Compatíveis</h1>
+      <div class="subtitle">// referência rápida de substituição e adaptação</div>
+
+      <h2>Suspensão</h2>
+      <table>
+        <tr><th>Item</th><th>Compatível</th><th>Observação</th></tr>
+        <tr><td>Bengalas</td><td>Twister</td><td>Mais curtas — usar alongadores ~6cm. Disco fica invertido.</td></tr>
+        <tr><td>Retentores de bengala</td><td>Honda XR200, XLX350, CBX250, CB500 / Fazer 250</td><td>Corteco ref. 7597N</td></tr>
+        <tr><td>Óleo de suspensão</td><td>ATF 10W</td><td>360ml por bengala</td></tr>
+        <tr><td>Rolamento direção</td><td>Fazer 250</td><td>—</td></tr>
+        <tr><td>Amortecedores traseiros</td><td>Kansas / Intruder / Mirage 150 / CB500</td><td>CB500 precisa ajuste de ângulo</td></tr>
+      </table>
+
+      <h2>Relação (Transmissão)</h2>
+      <table>
+        <tr><th>Item</th><th>Original</th><th>Alternativa</th></tr>
+        <tr><td>Pinhão</td><td>16 dentes</td><td>15 dentes Virago XV250 ou XL (mais torque, aço 1045)</td></tr>
+        <tr><td>Coroa</td><td>43 dentes (exclusiva)</td><td>41 dentes CBX200 Strada (aço 1045)</td></tr>
+        <tr><td>Corrente</td><td>118 elos passo 520H</td><td>D.I.D 120 elos 520 (tirar 2) / Emenda 2× CB400/450</td></tr>
+        <tr><td>Base da coroa</td><td>—</td><td>Twister (a MACIÇA, não a oca — trabalhar no torno)</td></tr>
+        <tr><td>Coxim da coroa</td><td>—</td><td>YBR (1mm mais folgado, sem problema)</td></tr>
+      </table>
+
+      <h2>Chassis / Tanque</h2>
+      <table>
+        <tr><th>Item</th><th>Compatível / Solução</th></tr>
+        <tr><td>Torneira de combustível</td><td>Intruder carburada (qualquer cilindrada) · Yes · YBR</td></tr>
+        <tr><td>Kit chave ignição + tampa tanque</td><td>Kansas 150</td></tr>
+        <tr><td>Tampa tanque vazando</td><td>Anel de câmara de ar de carro/caminhão sob a borracha original</td></tr>
+        <tr><td>Guidão com folga na mesa</td><td>Rebaixar tuchos do suporte 2,5mm e remontar</td></tr>
+        <tr><td>Mola descanso lateral</td><td>Titan (qualquer ano)</td></tr>
+        <tr><td>Pneu traseiro (carro)</td><td>175/65-15 Pirelli Cinturato · calibrar 35–40 psi</td></tr>
+        <tr><td>Pneu traseiro (Fusca)</td><td>5.60-15</td></tr>
+      </table>
+
+      <h2>Cabos</h2>
+      <table>
+        <tr><th>Cabo</th><th>Compatível</th><th>Observação</th></tr>
+        <tr><td>Acelerador</td><td>YBR Factor 2009</td><td>—</td></tr>
+        <tr><td>Acelerador (carb. lateral)</td><td>Titan 150</td><td>—</td></tr>
+        <tr><td>Freio traseiro</td><td>Biz</td><td>Fica igual ao original</td></tr>
+        <tr><td>Embreagem</td><td>VBlade250 · Kansas 250 · Virago 250 · Garinni 250 · Shineray 150</td><td>Alternativa: cabo bicicleta com safa-onça</td></tr>
+        <tr><td>Embreagem (guidão longo)</td><td>Cabo freio traseiro Suzuki Burgman 125</td><td>Para guidões até 30cm</td></tr>
+      </table>
+    </div>
+
+    <!-- REFORMA ELÉTRICA -->
+    <div id="page-reforma" class="page">
+      <h1>Reforma Elétrica</h1>
+      <div class="subtitle">// substituição completa do chicote — ordem de execução</div>
+
+      <h2>Fase 1 — Documentação (antes de desmontar)</h2>
+      <ul id="check-fase1" class="checklist">
+        <li><input type="checkbox" id="f1-1"><label for="f1-1">Fotografar o chicote atual de todos os ângulos (lateral, superior, próximos aos conectores)</label></li>
+        <li><input type="checkbox" id="f1-2"><label for="f1-2">Amarrar barbante em cada ramal e medir o comprimento</label></li>
+        <li><input type="checkbox" id="f1-3"><label for="f1-3">Identificar cada conector com fita adesiva numerada (CN01, CN02…)</label></li>
+        <li><input type="checkbox" id="f1-4"><label for="f1-4">Registrar qual conector vai em qual componente</label></li>
+        <li><input type="checkbox" id="f1-5"><label for="f1-5">Anotar pontos de fixação das abraçadeiras originais</label></li>
+      </ul>
+
+      <h2>Fase 2 — Desmontagem</h2>
+      <ul id="check-fase2" class="checklist">
+        <li><input type="checkbox" id="f2-1"><label for="f2-1">Desconectar SEMPRE o negativo da bateria primeiro</label></li>
+        <li><input type="checkbox" id="f2-2"><label for="f2-2">Remover carenagens laterais e frontal com cuidado</label></li>
+        <li><input type="checkbox" id="f2-3"><label for="f2-3">Retirar chicote antigo SEM cortar — usá-lo como molde</label></li>
+        <li><input type="checkbox" id="f2-4"><label for="f2-4">Separar componentes (CDI, bobinas, regulador) com etiqueta</label></li>
+        <li><input type="checkbox" id="f2-5"><label for="f2-5">Reservar conectores originais como referência de crimpagem</label></li>
+      </ul>
+
+      <h2>Fase 3 — Montagem do Chicote (bancada)</h2>
+      <table>
+        <tr><th>Etapa</th><th>Ramal</th><th>Componentes</th></tr>
+        <tr><td>3.1</td><td>Principal</td><td>Bateria → fusível → chave ignição → distribuição</td></tr>
+        <tr><td>3.2</td><td>Motor</td><td>CDI 1 e 2 → bobinas → sensor velocidade → bobina de carga → regulador</td></tr>
+        <tr><td>3.3</td><td>Traseiro</td><td>Lanterna/freio → piscas traseiros → interruptor freio traseiro → bóia</td></tr>
+        <tr><td>3.4</td><td>Dianteiro</td><td>Farol → piscas dianteiros → lanterna → velocímetro → painel</td></tr>
+        <tr><td>3.5</td><td>Guidão</td><td>Bloco de interruptores → relé pisca → buzina → interruptor freio dianteiro</td></tr>
+      </table>
+      <div class="info-block ok">✅ Monte cada ramal separadamente na bancada antes de instalar. Testar continuidade com multímetro em cada fio antes de conectar.</div>
+
+      <h2>Fase 4 — Instalação e Testes</h2>
+      <ul id="check-fase4" class="checklist">
+        <li><input type="checkbox" id="f4-1"><label for="f4-1">Instalar chicote pelos mesmos trajetos do original</label></li>
+        <li><input type="checkbox" id="f4-2"><label for="f4-2">Conectar ramais um de cada vez — não conectar bateria ainda</label></li>
+        <li><input type="checkbox" id="f4-3"><label for="f4-3">Verificar ausência de curtos com multímetro (entre + e − de cada ramal)</label></li>
+        <li><input type="checkbox" id="f4-4"><label for="f4-4">Conectar negativo da bateria por último</label></li>
+        <li><input type="checkbox" id="f4-5"><label for="f4-5">Ligar chave e verificar indicadores do painel</label></li>
+        <li><input type="checkbox" id="f4-6"><label for="f4-6">Testar cada sistema individualmente</label></li>
+        <li><input type="checkbox" id="f4-7"><label for="f4-7">Organizar e proteger chicote com espiral e abraçadeiras</label></li>
+      </ul>
+
+      <h2>Lista de Materiais — Resumo</h2>
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAcc(this)"><span>Fios — Bitolas e Cores</span><span class="acc-icon">▶</span></div>
+        <div class="accordion-body">
+          <table>
+            <tr><th>Bitola</th><th>Cor/Código</th><th>Qtd. mín.</th><th>Uso</th></tr>
+            <tr><td>2,5 mm²</td><td>Vermelho</td><td>3m</td><td>Positivo bateria → fusível → relé</td></tr>
+            <tr><td>2,5 mm²</td><td>Preto</td><td>3m</td><td>Negativo / massas principais</td></tr>
+            <tr><td>1,5 mm²</td><td>Vermelho</td><td>2m</td><td>Alimentação após fusível</td></tr>
+            <tr><td>1,5 mm²</td><td>Vd/Am</td><td>2m</td><td>Regulador → bateria</td></tr>
+            <tr><td>0,75 mm²</td><td>AC/AE/Am/Vd/L/Mr/R/Rx</td><td>2–5m cada</td><td>Sinalização, iluminação</td></tr>
+            <tr><td>0,50 mm²</td><td>Am/Vm · Az/B · P/B · Vd/P · Vd/Vm · Cz · B</td><td>2–3m cada</td><td>CDI, bobinas, sensores</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAcc(this)"><span>Conectores</span><span class="acc-icon">▶</span></div>
+        <div class="accordion-body">
+          <table>
+            <tr><th>Tipo</th><th>Qtd.</th><th>Aplicação</th></tr>
+            <tr><td>2P (fêmea + macho)</td><td>6 pares</td><td>Freio traseiro, dianteiro, sensor, bóia</td></tr>
+            <tr><td>3P</td><td>4 pares</td><td>Sensor velocidade, bobina de carga</td></tr>
+            <tr><td>4P</td><td>2 pares</td><td>Relé de partida</td></tr>
+            <tr><td>6P</td><td>4 pares</td><td>CDI 1, CDI 2, regulador/retificador</td></tr>
+            <tr><td>8P</td><td>2 pares</td><td>Bloco de interruptores guidão</td></tr>
+            <tr><td>Faston fêmea 6,3mm</td><td>20 un.</td><td>Bobinas, velas, fusível, buzina</td></tr>
+            <tr><td>Terminal olhal M6</td><td>6 un.</td><td>Pontos de massa, bornes bateria</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <h2>Pontos Críticos</h2>
+      <div class="info-block danger">⚠️ <strong>Fusível 20A:</strong> porta-fusível a no máximo 20cm do positivo da bateria. Nunca usar arame ou papel alumínio.</div>
+      <div class="info-block danger">⚠️ <strong>Massa (GND):</strong> pontos LIMPOS no chassi (usar lixa, remover tinta). Massa ruim é a causa nº1 de problemas elétricos.</div>
+      <div class="info-block warn">⚠️ <strong>Interruptor do Neutro:</strong> fio P/B no CDI 2, pino 6. Se defeituoso, a moto não dá partida mesmo com tudo correto.</div>
+    </div>
+
+    <!-- TESTES -->
+    <div id="page-testes" class="page">
+      <h1>Testes Finais</h1>
+      <div class="subtitle">// verificação completa pós-reforma elétrica</div>
+      <div class="info-block danger">⚠️ Se qualquer teste falhar, DESCONECTE a bateria antes de investigar. Nunca deixe a moto energizada sem supervisão.</div>
+
+      <table>
+        <tr><th>Cód.</th><th>Teste</th><th>Procedimento / Resultado esperado</th><th>Status</th></tr>
+        <tr><td><code>T01</code></td><td>Isolamento</td><td>Entre cada fio e chassi: &gt;1 MΩ. Se &lt;100kΩ → curto-terra.</td><td><input type="checkbox" id="t01"></td></tr>
+        <tr><td><code>T02</code></td><td>Tensão bateria</td><td>12,6V a 12,8V carregada. Abaixo de 12,0V → carregar antes.</td><td><input type="checkbox" id="t02"></td></tr>
+        <tr><td><code>T03</code></td><td>Chave ignição</td><td>Ao ligar: indicadores do painel acendem. Sem faísca ou fumaça.</td><td><input type="checkbox" id="t03"></td></tr>
+        <tr><td><code>T04</code></td><td>Farol</td><td>Baixo e alto via comutador — filamentos corretos.</td><td><input type="checkbox" id="t04"></td></tr>
+        <tr><td><code>T05</code></td><td>Piscas</td><td>DIR e ESQ independentes, frequência ~1 Hz.</td><td><input type="checkbox" id="t05"></td></tr>
+        <tr><td><code>T06</code></td><td>Freio traseiro</td><td>Pressionar pedal → lanterna freio acende (21W). Soltar → apaga.</td><td><input type="checkbox" id="t06"></td></tr>
+        <tr><td><code>T07</code></td><td>Freio dianteiro</td><td>Apertar manete → lanterna acende. Soltar → apaga.</td><td><input type="checkbox" id="t07"></td></tr>
+        <tr><td><code>T08</code></td><td>Buzina</td><td>Acionar botão → buzina soa claramente.</td><td><input type="checkbox" id="t08"></td></tr>
+        <tr><td><code>T09</code></td><td>Partida elétrica</td><td>Motor em neutro → motor de partida engata e gira.</td><td><input type="checkbox" id="t09"></td></tr>
+        <tr><td><code>T10</code></td><td>Tensão de carga</td><td>A 3.000 RPM → 13,5V a 14,5V nos bornes da bateria.</td><td><input type="checkbox" id="t10"></td></tr>
+        <tr><td><code>T11</code></td><td>Faísca</td><td>Vela fora + encostada na massa → faísca azul forte.</td><td><input type="checkbox" id="t11"></td></tr>
+        <tr><td><code>T12</code></td><td>Velocímetro</td><td>Em movimento → ponteiro responde proporcionalmente, sem oscilações.</td><td><input type="checkbox" id="t12"></td></tr>
+        <tr><td><code>T13</code></td><td>Combustível</td><td>Tanque cheio → ponteiro em F. Responde ao flutuador.</td><td><input type="checkbox" id="t13"></td></tr>
+      </table>
+      <div id="test-progress" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- MANUTENÇÃO -->
+    <div id="page-manutencao" class="page">
+      <h1>Manutenção</h1>
+      <div class="subtitle">// intervalos · procedimentos · dicas de armazenagem</div>
+
+      <h2>Armazenagem Prolongada</h2>
+      <ul class="steps">
+        <li><span class="num">1</span><span>Fechar a torneira de combustível.</span></li>
+        <li><span class="num">2</span><span>Dar partida e deixar funcionar até a gasolina no sistema acabar e o motor apagar.</span></li>
+        <li><span class="num">3</span><span>Soltar os cabos da bateria.</span></li>
+      </ul>
+
+      <h2>Intervalos de Manutenção</h2>
+      <table>
+        <tr><th>Item</th><th>Intervalo Manual</th><th>Dica Cleiton</th></tr>
+        <tr><td>Troca de óleo motor</td><td>1.500 km</td><td>2.500 km</td></tr>
+        <tr><td>Troca de filtro de óleo</td><td>Com troca de óleo</td><td>Sempre trocar se for de papel</td></tr>
+        <tr><td>Vela de ignição</td><td>Verificar desgaste</td><td>—</td></tr>
+        <tr><td>Corrente de transmissão</td><td>Lubrificar regularmente</td><td>—</td></tr>
+      </table>
+
+      <h2>Tampa do Estator — Vazamento</h2>
+      <div class="info-block info">
+        Na curva onde passam os fios (onde a borracha encaixa): limpar com thinner, aplicar cola 3M de alta temperatura e recolocar a borracha.
+      </div>
+
+      <h2>Aterramento Direto no Chassi</h2>
+      <div class="info-block ok">
+        Localizar fios <strong>verdes</strong>, cortar, decapar e prender no parafuso mais próximo no chassi. Melhora muito a confiabilidade elétrica.
+      </div>
+
+      <h2>Velocímetro Digital Universal — Configuração</h2>
+      <ul class="steps">
+        <li><span class="num">1</span><span><strong>Config 1 (velocidade):</strong> C = 2 × 3,14 × raio em mm. Ex: roda 300mm → C = 1.884 → digitar 1884.</span></li>
+        <li><span class="num">2</span><span><strong>Config 2 (ímãs):</strong> 4 se usar cabo original VBlade · 2 se usar os do kit digital.</span></li>
+        <li><span class="num">3</span><span><strong>Config 3:</strong> Cilindros → 2</span></li>
+        <li><span class="num">4</span><span><strong>Config 4:</strong> Combustível → 2 (fios)</span></li>
+        <li><span class="num">5</span><span><strong>Config 5:</strong> Zerar quilometragem (apertar e segurar botão traseiro)</span></li>
+      </ul>
+      <div class="info-block info">Painel digital 2017: senha CCC = 123 · cilindros Y = 2 · combustível = 1 (2 fios) · raio = 030 (se 30cm)</div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── NAVIGATION ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const btns = document.querySelectorAll('nav button');
+  btns.forEach(b => { if (b.getAttribute('onclick')?.includes("'" + id + "'")) b.classList.add('active'); });
+}
+
+// ── ACCORDION ──
+function toggleAcc(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
+// ── CHECKLIST DONE STATE ──
+document.addEventListener('change', function(e) {
+  if (e.target.type === 'checkbox') {
+    const li = e.target.closest('li');
+    if (li) li.classList.toggle('done', e.target.checked);
+    updateTestProgress();
+  }
+});
+
+function updateTestProgress() {
+  const all = document.querySelectorAll('#page-testes input[type=checkbox]');
+  const done = [...all].filter(c => c.checked).length;
+  const el = document.getElementById('test-progress');
+  if (el) {
+    const pct = Math.round((done / all.length) * 100);
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="flex:1;background:var(--bg3);height:8px;border-radius:4px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${pct===100?'var(--green)':'var(--accent)'};border-radius:4px;transition:width .3s;"></div>
+        </div>
+        <span style="font-family:var(--mono);font-size:0.78rem;color:${pct===100?'var(--green)':'var(--accent)'};">${done}/${all.length} — ${pct}%</span>
+        ${pct===100 ? '<span style="color:var(--green);font-size:1.1rem;">✅ Aprovado!</span>' : ''}
+      </div>`;
+  }
+}
+updateTestProgress();
+
+// ── SEARCH ──
+const searchData = [
+  { title: 'CDI (1) — Conector 6P', cat: 'Elétrica', page: 'eletrica', text: 'Az/B Am/Vm P/Vm Vd/P kill switch bobina ignição sensor velocidade' },
+  { title: 'CDI (2) — Conector 6P', cat: 'Elétrica', page: 'eletrica', text: 'Az/B Am/Vm P/Vm Vd/P interruptor do neutro P/B' },
+  { title: 'Regulador / Retificador', cat: 'Elétrica', page: 'eletrica', text: 'Twister Falcon XRE Kansas regulador retificador Vd/Am branco fases CA' },
+  { title: 'Relé de Partida', cat: 'Elétrica', page: 'eletrica', text: 'diodo 6A 400V botão partida Vd/Vm motor de partida' },
+  { title: 'Bobinas de Ignição', cat: 'Elétrica', page: 'eletrica', text: 'Sahara 350 Titan 150 Web 100 Hunter Max vela faiston' },
+  { title: 'Estator', cat: 'Elétrica', page: 'eletrica', text: 'Virago 250 Garinni GR250T3 Kansas 250 código 3DM-81410-00' },
+  { title: 'Relé do Pisca', cat: 'Elétrica', page: 'eletrica', text: 'DNI1109 Biz 100 CG 150 polo 31 49 49a' },
+  { title: 'Legenda completa dos fios', cat: 'Fios & Cores', page: 'fios', text: 'AC AE Am Azul Amarelo Verde Vermelho Preto Cinza Laranja Marrom Rosa Roxo Branco bitola 0.75 0.50 1.5 2.5' },
+  { title: 'Bóia de combustível', cat: 'Fios & Cores', page: 'fios', text: 'Vm/Vd resistência 10 ohm 110 ohm cheio vazio marcador' },
+  { title: 'Óleo do Motor', cat: 'Motor & Óleo', page: 'motor', text: '20W40 20W50 Mobil 1400 1600 1800 mL filtro 1500 2500 km' },
+  { title: 'Filtro de Óleo', cat: 'Motor & Óleo', page: 'motor', text: 'XT600 Virago 250 Garinni 250 Kansas 250 tela lavável gasolina' },
+  { title: 'Embreagem', cat: 'Motor & Óleo', page: 'motor', text: 'XT600 Virago 250 Kansas cubo rebaixar 2mm molas patinação' },
+  { title: 'Velas', cat: 'Motor & Óleo', page: 'motor', text: 'NGK C7HSA CR7HIX iridium Pop100 YBR cabeçote vela retentor guias anéis' },
+  { title: 'Freio Dianteiro — Disco e Pinça', cat: 'Freios', page: 'freios', text: 'Virago 250 XT600 4mm Yes 125 Kansas 150 XTZ 125 pinça pastilha burrinho cilindro mestre Biz Titan Twister' },
+  { title: 'Freio Traseiro — Lona e Patim', cat: 'Freios', page: 'freios', text: 'Fischer Fiat 147 lona patim rebitar mola Fazer 250 CG 2009' },
+  { title: 'Varão freio traseiro', cat: 'Freios', page: 'freios', text: 'CG Titan 125 varão eliminar cabo aço porca M6 mola borrachudo' },
+  { title: 'Regulagem do Carburador', cat: 'Carburador', page: 'carburador', text: 'parafuso mistura rotação 2 voltas e meia lenta estabilizar' },
+  { title: 'Nível da Bóia', cat: 'Carburador', page: 'carburador', text: '17mm 8mm bóia paquímetro cuba tampa CG To Day' },
+  { title: 'Limpeza do Carburador', cat: 'Carburador', page: 'carburador', text: 'CAR 80 giclê alta baixa flauta diafragma pistonete agulha desgaste' },
+  { title: 'Carburador Lateral CG', cat: 'Carburador', page: 'carburador', text: 'Titan 150 paralelo 2005 2009 giclê 110 coletor aço carbono Cleiton PCR Motos' },
+  { title: 'Bomba a Vácuo', cat: 'Carburador', page: 'carburador', text: 'Mikuni universal kart diafragma PET RX mangueiras ar comprimido' },
+  { title: 'Suspensão e Amortecedores', cat: 'Peças Compat.', page: 'pecas', text: 'Twister bengalas Corteco 7597N XR200 Kansas Intruder Mirage CB500 alongadores' },
+  { title: 'Relação / Transmissão', cat: 'Peças Compat.', page: 'pecas', text: 'pinhão 15 16 coroa 41 43 corrente 520H 118 elos Virago CBX200 Twister maciça' },
+  { title: 'Cabos — Acelerador, Embreagem, Freio', cat: 'Peças Compat.', page: 'pecas', text: 'YBR Factor Biz Titan 150 Virago Kansas Garinni Burgman 125 safa onça' },
+  { title: 'Ordem de Execução da Reforma', cat: 'Reforma Elétrica', page: 'reforma', text: 'documentação desmontagem chicote bancada ramais fusível CDI instalação' },
+  { title: 'Lista de Materiais', cat: 'Reforma Elétrica', page: 'reforma', text: 'fios 2.5 1.5 0.75 0.50 conectores 2P 3P 4P 6P 8P faston olhal fusível espiral abraçadeiras' },
+  { title: 'Checklist de Testes', cat: 'Testes Finais', page: 'testes', text: 'T01 T02 isolamento bateria farol pisca freio buzina partida tensão carga faísca velocímetro combustível' },
+  { title: 'Armazenagem Prolongada', cat: 'Manutenção', page: 'manutencao', text: 'fechar torneira gasolina acabar cabos bateria soltar' },
+  { title: 'Velocímetro Digital Universal', cat: 'Manutenção', page: 'manutencao', text: 'configuração circunferência imã cilindros combustível 2 fios raio 030' },
+];
+
+const inp = document.getElementById('searchInput');
+const res = document.getElementById('search-results');
+
+inp.addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  if (!q) { res.style.display = 'none'; return; }
+  const matches = searchData.filter(d =>
+    d.title.toLowerCase().includes(q) || d.text.toLowerCase().includes(q) || d.cat.toLowerCase().includes(q)
+  ).slice(0, 8);
+  if (!matches.length) { res.style.display = 'none'; return; }
+  res.innerHTML = matches.map(m => {
+    const hi = (s) => s.replace(new RegExp(`(${q})`, 'gi'), '<mark>$1</mark>');
+    return `<div class="sr-item" onclick="showPage('${m.page}');this.closest('#search-results').style.display='none';document.getElementById('searchInput').value='';">
+      <div class="sr-cat">${m.cat}</div>
+      <div class="sr-title">${hi(m.title)}</div>
+    </div>`;
+  }).join('');
+  res.style.display = 'block';
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-wrap')) res.style.display = 'none';
+});
+
+inp.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { res.style.display = 'none'; this.blur(); }
+});
+</script>
+</body>
+</html>
